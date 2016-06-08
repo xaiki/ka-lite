@@ -34,6 +34,11 @@ override_dh_auto_install:
 # using dh-exec
 override_dh_install:
 	dh_install --fail-missing
+	# Prepare files to be in the right place for xdg-app builds.
+ifneq (,$(filter xdg-app,$(DEB_BUILD_PROFILES)))
+	mkdir -p debian/ka-lite/app/share/applications
+	cp debian/flatpak/*desktop debian/ka-lite/app/share/applications
+endif
 
 
 ifeq ($(filter stage1,$(DEB_BUILD_PROFILES)),)

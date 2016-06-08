@@ -1,0 +1,11 @@
+[Desktop Entry]
+Icon=org.learningequality.kalite
+Keywords=Video;
+Name=KA Lite
+Type=Application
+Version=1.0
+Exec=kalite start
+Comment=KA Lite (Comment)
+Terminal=false
+Categories=Video;
+GenericName=KA Lite (Generic Name)
