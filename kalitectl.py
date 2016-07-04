@@ -557,6 +557,13 @@ def start(debug=False, watch=False, daemonize=True, args=[], skip_job_scheduler=
             as_thread=True
         )
 
+    def get_systemd_socket():
+        """Shows how to get the socket"""
+        SYSTEMD_FIRST_SOCKET_FD = 3
+        socket_type = http.server.HTTPServer.socket_type
+        address_family = http.server.HTTPServer.address_family
+        return socket.fromfd(SYSTEMD_FIRST_SOCKET_FD, address_family, socket_type)
+
     # Start cherrypy service
     cherrypy.config.update({
         'server.socket_host': LISTEN_ADDRESS,
@@ -564,6 +571,11 @@ def start(debug=False, watch=False, daemonize=True, args=[], skip_job_scheduler=
         'server.thread_pool': 18,
         'checker.on': False,
     })
+
+    if os.environ.get('LISTEN_PID', None):
+        cherrypy.config.update({
+            'server.socket_file': get_systemd_socket()
+        })
 
     DjangoAppPlugin(cherrypy.engine).subscribe()
     if not watch:
