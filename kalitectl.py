@@ -500,8 +500,8 @@ def start(debug=False, watch=False, daemonize=True, args=[], skip_job_scheduler=
     # Check that the port is available by creating a simple socket and see
     # if it succeeds... if it does, the port is occupied.
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    connection_error = sock.connect_ex(('127.0.0.1', port))
-    if not connection_error:
+    connection = sock.connect_ex(('127.0.0.1', port))
+    if not os.environ.get('LISTEN_PID', connection):
         sys.stderr.write(
             "Port {0} is occupied. Please close the process that is using "
             "it.\n".format(port)
