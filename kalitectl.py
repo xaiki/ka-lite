@@ -560,8 +560,8 @@ def start(debug=False, watch=False, daemonize=True, args=[], skip_job_scheduler=
     def get_systemd_socket():
         """Shows how to get the socket"""
         SYSTEMD_FIRST_SOCKET_FD = 3
-        socket_type = http.server.HTTPServer.socket_type
-        address_family = http.server.HTTPServer.address_family
+        socket_type = socket.AF_INET
+        address_family = socket.SOCK_STREAM
         return socket.fromfd(SYSTEMD_FIRST_SOCKET_FD, address_family, socket_type)
 
     # Start cherrypy service
