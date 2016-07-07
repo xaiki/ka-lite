@@ -1779,11 +1779,25 @@ class HTTPServer(object):
                 self.ssl_adapter = pyOpenSSLAdapter(
                     self.ssl_certificate, self.ssl_private_key,
                     getattr(self, 'ssl_certificate_chain', None))
-        
+
+        def get_systemd_socket():
+            """Systemd's socket is always 3"""
+            import BaseHTTPServer
+
+            SYSTEMD_FIRST_SOCKET_FD = 3
+            socket_type = BaseHTTPServer.HTTPServer.socket_type
+            address_family = BaseHTTPServer.HTTPServer.address_family
+            return socket.fromfd(SYSTEMD_FIRST_SOCKET_FD, address_family, socket_type)
+
         # Select the appropriate socket
-        if isinstance(self.bind_addr, basestring):
+        self.socket = None
+        if os.environ.get('LISTEN_PID', None):
+            # Systemd Socket Activation
+            print ("SOCKET ACTIVATION, python3")
+            self.socket = get_systemd_socket()
+        elif isinstance(self.bind_addr, basestring):
             # AF_UNIX socket
-            
+
             # So we can reuse the socket...
             try: os.unlink(self.bind_addr)
             except: pass
@@ -1807,22 +1821,22 @@ class HTTPServer(object):
                 else:
                     info = [(socket.AF_INET, socket.SOCK_STREAM,
                              0, "", self.bind_addr)]
-        
-        self.socket = None
-        msg = "No socket could be created"
-        for res in info:
-            af, socktype, proto, canonname, sa = res
-            try:
-                self.bind(af, socktype, proto)
-            except socket.error:
-                if self.socket:
-                    self.socket.close()
-                self.socket = None
-                continue
-            break
+
         if not self.socket:
-            raise socket.error(msg)
-        
+            msg = "No socket could be created"
+            for res in info:
+                af, socktype, proto, canonname, sa = res
+                try:
+                    self.bind(af, socktype, proto)
+                except socket.error:
+                    if self.socket:
+                        self.socket.close()
+                    self.socket = None
+                    continue
+                break
+            if not self.socket:
+                raise socket.error(msg)
+
         # Timeout so KeyboardInterrupt can be caught on Win32
         self.socket.settimeout(1)
         self.socket.listen(self.request_queue_size)
